@@ -79,19 +79,19 @@
                     SimpleDateFormat fechaString = new SimpleDateFormat("dd/mm/yyyy");
                 %>
                 <table style="border: black"><tr><th></th><th>Anilla</th><th>Especie</th><th>Lugar</th><th>Fecha</th></tr>
-                   <%
-                       if (aves != null) {
-                           String anilla = request.getParameter("anilla");
-                           for (int i = 0; i < aves.size(); i++) { 
-                                boolean checked = false;
-                                if (anilla == null) {
-                                    checked = false;
-                                } else if (anilla.equals(aves.get(i).getAnilla())) {
-                                    checked = true;
-                                }
-             %>
+                            <%
+                                if (aves != null) {
+                                    String anilla = request.getParameter("anilla");
+                                    for (int i = 0; i < aves.size(); i++) {
+                                        boolean checked = false;
+                                        if (anilla == null) {
+                                            checked = false;
+                                        } else if (anilla.equals(aves.get(i).getAnilla())) {
+                                            checked = true;
+                                        }
+                            %>
                     <tr>
-                        <td><input type="radio" name="anilla" value="<%=aves.get(i).getAnilla()%>" <%=checked?"checked":""%> onclick="mostrarDatos('<%=aves.get(i).getAnilla()%>')"></td>
+                        <td><input type="radio" name="anilla" value="<%=aves.get(i).getAnilla()%>" <%=checked ? "checked" : ""%> onclick="mostrarDatos('<%=aves.get(i).getAnilla()%>')"></td>
                         <td><%=aves.get(i).getAnilla()%></td>
                         <td><%=aves.get(i).getEspecie()%></td>
                         <td><%=aves.get(i).getLugar()%></td>
@@ -108,36 +108,38 @@
                 %>
                 <p>Lo sentimos no hay aves que mostrar</p>
                 <%
-                }%> 
-                
+                    }%> 
+
 
             </div>
-                </form>
-<form id="formulario2" action="./Realizar" method="post">
-    <%
-            AveBean seleccionado = null;
-                    for (AveBean ave: aves) {
+        </form>
+        <form id="formulario2" action="./Realizar" method="post">
+            <%
+                AveBean seleccionado = null;
+                for (AveBean ave : aves) {
                     if (ave.getAnilla().equals(request.getParameter("anilla"))) {
-                        seleccionado = ave;%>
-                        <p>Va a eliminar el ave: </p>
-                        
-         
-                   <% } 
-                  }%>
-                  <p><%=seleccionado!=null?seleccionado.toString():""%></p>
-                        
-         <input type="hidden" name="oculto" value="insertar">
-         <input type="hidden" name="anilla" value="<%=request.getParameter("anilla")%>">
-           <input type="hidden" name="aveBean" value="<%=seleccionado%>">
-            <div class="datos" id="datos">
+                seleccionado = ave;
                 
+            %>
+            <p>Va a eliminar el ave: </p>
+
+
+            <% }
+                       }%>
+            <p><%=seleccionado != null ? seleccionado.toString() : ""%></p>
+
+            <input type="hidden" name="oculto" value="eliminar">
+            <input type="hidden" name="anilla" value="<%=request.getParameter("anilla")%>">
+            <input type="hidden" name="avebean" value="<%=seleccionado%>">
+            <div class="datos" id="datos">
+
             </div>
             <a href="<%=request.getContextPath()%>" class="enlaceboton">Volver</a>
-            <% 
+            <%
                 if (request.getParameter("anilla") != null) {%>
-                    <input type="submit" name="Borrar" value="Borrar" >
+            <input type="submit" name="eliminar" value="Borrar" >
             <%}%>
-            
-</form>
+
+        </form>
     </body>
 </html>

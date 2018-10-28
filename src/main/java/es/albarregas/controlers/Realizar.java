@@ -80,62 +80,66 @@ public class Realizar extends HttpServlet {
         processRequest(request, response);
         response.setContentType("text/html;charset=UTF-8");
         datosAve = getAve(request);
-        String[] mensajes = comprobarDatos(datosAve);
         String opcion = request.getParameter("oculto");
 
         String url = "";
-        if (mensajes == null) {
-            request.setAttribute("mensaje", null);
-            try {
-                if (opcion != null) {
-                    switch (opcion) {
-                        case "insertar":
-                            insertarAnilla();
-                            break;
-                        case "eliminar":
-                            eliminarAnilla();
-                    }
-                }
-                request.setAttribute("opcion", opcion);
-                request.setAttribute("datos", datosAve.toString());
-                url += "./JSP/resultado.jsp";
-            } catch (SQLException ex) {
-                throw new RuntimeException(ex.getMessage());
-            }
+        request.setAttribute("mensaje", null);
+        try {
+            if (opcion != null) {
+                switch (opcion) {
+                    case "insertar":
+                        String[] mensajes = comprobarDatos(datosAve);
+                        if (mensajes == null) {
 
-        } else {
-            request.setAttribute("mensaje", mensajes);
-            request.setAttribute("anilla", datosAve.getAnilla());
-            request.setAttribute("especie", datosAve.getEspecie());
-            request.setAttribute("fecha", datosAve.getFecha());
-            request.setAttribute("lugar", datosAve.getLugar());
-            url += "./JSP/create/inicioInsertar.jsp";
+                            insertarAnilla();
+                        } else {
+                            request.setAttribute("mensaje", mensajes);
+                            request.setAttribute("anilla", datosAve.getAnilla());
+                            request.setAttribute("especie", datosAve.getEspecie());
+                            request.setAttribute("fecha", datosAve.getFecha());
+                            request.setAttribute("lugar", datosAve.getLugar());
+                            url += "./JSP/create/inicioInsertar.jsp";
+                        }
+                        break;
+                    case "eliminar":
+                        obtenerAve();
+                        eliminarAnilla();
+                        break;
+                }
+            }
+            request.setAttribute("opcion", opcion);
+            request.setAttribute("datos", datosAve.toString());
+            url += "./JSP/resultado.jsp";
+        } catch (SQLException ex) {
+            throw new RuntimeException(ex.getMessage());
         }
-        request.getRequestDispatcher(url).forward(request, response);
+
+        request.getRequestDispatcher(url)
+                .forward(request, response);
     }
     // Método que recoge los parámetros con los datos desde la pantalla.
     // Se leen desde la request los datos que se van a insertar en la nueva ficha
     // del ave.
 
     private AveBean getAve(HttpServletRequest request) {
-        AveBean aveBean = (AveBean) request.getAttribute("aveBean");
-        if (aveBean != null) {
-            aveBean = new AveBean();
-            aveBean.setAnilla(request.getParameter("anilla"));
-            aveBean.setEspecie(request.getParameter("especie"));
-            String fechaString = request.getParameter("fecha");
-            Date fecha = null;
-            if (fechaString != null) {
-                SimpleDateFormat formateador = new SimpleDateFormat("yyyy-MM-dd");
-                try {
-                    fecha = formateador.parse(fechaString);
-                } catch (ParseException ex) {
-                    Logger.getLogger(Realizar.class.getName()).log(Level.SEVERE, null, ex);
-                }
+        AveBean aveBean = new AveBean();
+        aveBean.setAnilla(request.getParameter("anilla"));
+        aveBean.setEspecie(request.getParameter("especie"));
+        String fechaString = request.getParameter("fecha");
+        Date fecha = null;
+        if (fechaString != null) {
+            SimpleDateFormat formateador = new SimpleDateFormat("yyyy-MM-dd");
+            try {
+                fecha = formateador.parse(fechaString);
+
+            } catch (ParseException ex) {
+                Logger.getLogger(Realizar.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
-            aveBean.setFecha(fecha);
-            aveBean.setLugar(request.getParameter("lugar"));
         }
+        aveBean.setFecha(fecha);
+        aveBean.setLugar(request.getParameter("lugar"));
+
         return aveBean;
     }
 
@@ -172,9 +176,12 @@ public class Realizar extends HttpServlet {
                 Conexion.cerrarConexion(conectar);
 
             } catch (SQLException ex) {
-                Logger.getLogger(Realizar.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Realizar.class
+                        .getName()).log(Level.SEVERE, null, ex);
+
             } catch (ServletException ex) {
-                Logger.getLogger(Realizar.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Realizar.class
+                        .getName()).log(Level.SEVERE, null, ex);
             }
 
         }
@@ -196,8 +203,10 @@ public class Realizar extends HttpServlet {
             rs = ps.executeUpdate();
 
             conectar.close();
+
         } catch (SQLException ex) {
-            Logger.getLogger(Realizar.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Realizar.class
+                    .getName()).log(Level.SEVERE, null, ex);
             throw ex;
         }
 
@@ -248,8 +257,73 @@ public class Realizar extends HttpServlet {
         return mensaje;
     }
 
-    private void eliminarAnilla() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    private void eliminarAnilla() throws SQLException {
+        Connection conectar = Conexion.conectar();
+        String sql = "delete from aves where anilla =?;";
+        PreparedStatement ps = null;
+        int rs = 0;
+        try {
+            ps = conectar.prepareStatement(sql);
+            ps.setString(1, datosAve.getAnilla());
+
+            rs = ps.executeUpdate();
+
+            conectar.close();
+
+        } catch (SQLException ex) {
+            Logger.getLogger(Realizar.class
+                    .getName()).log(Level.SEVERE, null, ex);
+            throw ex;
+        }
     }
 
+    private void obtenerAve() {
+       Connection conectar= Conexion.conectar();
+        String sql="Select anilla,nombre,lugar,fecha from aves where anilla = '"+datosAve.getAnilla()+"'";
+       PreparedStatement ps = null;
+       ResultSet rs=null;
+       
+        try {
+            ps=conectar.prepareStatement(sql);
+            rs = ps.executeQuery(sql);
+             
+            while(rs.next()){
+                 AveBean ave=new AveBean();
+                ave.setAnilla(rs.getString(1));
+                ave.setEspecie(rs.getString(2));
+                ave.setLugar(rs.getString(3));
+                
+                ave.setFecha(convertirFecha(rs.getString(4)));
+                datosAve = ave;
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(Operacion.class.getName()).log(Level.SEVERE, null, ex);
+        }finally{
+            try {
+                ps.close();
+                rs.close();
+                try {
+                    Conexion.cerrarConexion(conectar);
+                } catch (ServletException ex) {
+                    Logger.getLogger(Operacion.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } catch (SQLException ex) {
+                Logger.getLogger(Operacion.class.getName()).log(Level.SEVERE, null, ex);
+            }
+          
+        }
+    }
+private Date convertirFecha(String fechaCad){
+        try {
+            Date fechaCorrecta=null;
+            SimpleDateFormat fecha=new SimpleDateFormat("dd/mm/yyyy");
+            fechaCorrecta=(Date)fecha.parse(fechaCad);
+            return fechaCorrecta;
+            
+        } catch (ParseException ex) {
+            return null;
+        }
+        
+        
+    }
 }
